@@ -127,7 +127,7 @@ defmodule Mailgun.Client do
     request(conf, :post, url("/messages", conf[:domain]), "api", conf[:key], [], ctype, body)
   end
   defp send_with_attachments(conf, email, attachments) do
-    attrs =
+    email_attrs =
       email
       |> Dict.merge(%{
         to: Dict.fetch!(email, :to),
@@ -136,6 +136,8 @@ defmodule Mailgun.Client do
         html: Dict.get(email, :html, ""),
         subject: Dict.get(email, :subject, ""),
         "recipient-variables": Dict.get(email, :recipient_variables, "")})
+    email_attrs = Dict.drop(email, get_atts_to_drop(email_attrs))
+    attrs = email_attrs
       |> Enum.map(fn
         {k, v} when is_binary(v) -> {k, String.to_char_list(v)}
         {k, v} -> {k, v}
@@ -228,7 +230,7 @@ defmodule Mailgun.Client do
 
   defp get_atts_to_drop(email) do
     if Dict.get(email, :recipient_variables, "") == "" do
-      [:attachments, "recipient-variables"]
+      [:attachments, :"recipient-variables"]
     else
       [:attachments]
     end
